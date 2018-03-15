@@ -173,5 +173,8 @@ int priqueue_size(priqueue_t *q)
  */
 void priqueue_destroy(priqueue_t *q)
 {
-
+	while (q -> size != 0)
+	{
+		priqueue_poll(q);
+	}
 }
