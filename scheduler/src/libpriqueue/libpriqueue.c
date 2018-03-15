@@ -158,8 +158,9 @@ void *priqueue_poll(priqueue_t *q)
 	else
 	{
 		struct node_t* temp = q -> head;
-		q -> head = q -> head -> next;
-		free (q -> head);
+		q -> head = temp -> next;
+		free (temp);
+		temp = NULL;
 		q -> size--;
 		return data;
 	}
@@ -281,5 +282,8 @@ int priqueue_size(priqueue_t *q)
  */
 void priqueue_destroy(priqueue_t *q)
 {
-
+	while (q -> size != 0)
+	{
+		priqueue_poll(q);
+	}
 }
