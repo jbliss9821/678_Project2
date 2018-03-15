@@ -104,7 +104,23 @@ void *priqueue_poll(priqueue_t *q)
  */
 void *priqueue_at(priqueue_t *q, int index)
 {
-	return NULL;
+	struct node_t* temp = q -> head;
+	if(q -> size == 0)
+	{
+		return NULL;
+	}
+	else if (index >= q-> size || index < 0)
+	{
+		return NULL;
+	}
+	 else
+		{
+		for (int i = 0; i < index; i++)
+		{
+			temp = temp -> next;
+		}
+		return temp -> data;;
+		}
 }
 
 
