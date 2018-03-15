@@ -234,6 +234,18 @@ int priqueue_remove(priqueue_t *q, void *ptr)
  */
 void *priqueue_remove_at(priqueue_t *q, int index)
 {
+	if (index >= q->size || index < 0 || q->size == 0)
+	{
+		return (NULL);
+	}
+	else
+	{
+		struct node_t* current_node = q->head;
+		for (int i = 0; i < index; i++)
+		{
+			current_node = current_node->next;
+		}
+	}
 	return 0;
 }
 
@@ -246,7 +258,7 @@ void *priqueue_remove_at(priqueue_t *q, int index)
  */
 int priqueue_size(priqueue_t *q)
 {
-	return q->size;
+	return (q->size);
 }
 
 
@@ -257,8 +269,5 @@ int priqueue_size(priqueue_t *q)
  */
 void priqueue_destroy(priqueue_t *q)
 {
-	for (int i = 0; i < q->size; i++)
-	{
-		priqueue_poll(q);
-	}
+
 }
