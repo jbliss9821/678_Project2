@@ -55,7 +55,7 @@ void *priqueue_peek(priqueue_t *q)
 	else
 	{
 		void* data = q -> head -> value;
-		return value;
+		return data;
 	}
 }
 
@@ -87,6 +87,7 @@ void *priqueue_poll(priqueue_t *q)
 		struct node_t* temp = q -> head;
 		q -> head = temp -> next;
 		free (temp);
+		temp = NULL;
 		q -> size--;
 		return data;
 	}
