@@ -208,18 +208,7 @@ void *priqueue_at(priqueue_t *q, int index)
  */
 int priqueue_remove(priqueue_t *q, void *ptr)
 {
-	int remove_count = 0;
-	void *remove_value = ptr;
-	if (p->size == 0)
-	{
-		return (0);
-	}
-	for (int i = 0; i < q->size; i++)
-	{
-		
-	}
-	
-	return (remove_count);
+
 }
 
 
