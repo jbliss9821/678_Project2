@@ -48,20 +48,66 @@ int priqueue_offer(priqueue_t *q, void *ptr)
 	new_node->value = ptr;
 	new_node->parent = NULL;
 	new_node->next = NULL;
+	int index = 0; //location of insertion into queue, auto set to 0 for empty queue index  
 	
-	if (q->head == NULL)
+	if (q->head == NULL)//if queue is empty
 	{
 		q->head = new_node;
 		q->tail = new_node;
 		q->size = q->size + 1;
-		return 0;
 	}
-	else
+	else//if queue is not empty need to compare until find a proper place
 	{
-		//call compare with nodes to find where it goes
-		//return location 
+		struct node_t* current_node = q->head;
+		int compare_value;//temp value to hold compare function return
+		int search = 1;
+		while (search == 1)//while still searching
+		{			
+			if (current_node == NULL)//if current node is null, reached end of list and must insert at end 
+			{
+				search = 0;//signal no longer searching for a place
+			}
+			else 
+			{
+				compare_value = q->compare(new_node->value, current_node->value);
+				if (compare_value < 0)//if new_node value has higher priority and goes before current node
+				{
+					search = 0;//end the search
+				}
+				else//else keep searching
+				{
+					current_node = current_node->next;
+					index = index + 1;					
+				}
+			}
+		}
+		
+		if (current_node == NULL)//if no node found that is less priority add to back
+		{
+			q->tail->next = new_node;
+			new_node->parent = q->tail;
+			q->tail = new_node;
+			q->size = q->size+1;
+			index = index - 1;//need to go back one to deal with going past the last node
+		}
+		else if( index == 0)
+		{
+			q->head->parent = new_node;
+			new_node->next = q->head;
+			q->head = new_node;
+			q->size = q->size +1;
+		}
+		else
+		{
+			struct node_t* previous = current_node->parent;
+			previous->next = new_node;
+			new_node->parent = previous;
+			new_node->next = current_node;
+			current_node->parent = new_node;
+			q->size = q->size + 1;
+		}
 	}
-	return -1;
+	return (index);
 }
 
 
