@@ -6,6 +6,15 @@
 
 #include "libpriqueue.h"
 
+/**
+struct node_t
+{
+  void* value;
+  struct node_t* next;
+  struct node_t* parent;
+}
+*/
+
 
 /**
   Initializes the priqueue_t data structure.
@@ -21,6 +30,7 @@ void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))
 {
 	q -> size = 0;
 	q -> head = NULL;
+	q -> tail = NULL;
 	q -> compare = comparer;
 }
 
@@ -34,7 +44,70 @@ void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))
  */
 int priqueue_offer(priqueue_t *q, void *ptr)
 {
-	return -1;
+	struct node_t* new_node = malloc(sizeof( struct node_t));
+	new_node->value = ptr;
+	new_node->parent = NULL;
+	new_node->next = NULL;
+	int index = 0; //location of insertion into queue, auto set to 0 for empty queue index  
+	
+	if (q->head == NULL)//if queue is empty
+	{
+		q->head = new_node;
+		q->tail = new_node;
+		q->size = q->size + 1;
+	}
+	else//if queue is not empty need to compare until find a proper place
+	{
+		struct node_t* current_node = q->head;
+		int compare_value;//temp value to hold compare function return
+		int search = 1;
+		while (search == 1)//while still searching
+		{			
+			if (current_node == NULL)//if current node is null, reached end of list and must insert at end 
+			{
+				search = 0;//signal no longer searching for a place
+			}
+			else 
+			{
+				compare_value = q->compare(new_node->value, current_node->value);
+				if (compare_value < 0)//if new_node value has higher priority and goes before current node
+				{
+					search = 0;//end the search
+				}
+				else//else keep searching
+				{
+					current_node = current_node->next;
+					index = index + 1;					
+				}
+			}
+		}
+		
+		if (current_node == NULL)//if no node found that is less priority add to back
+		{
+			q->tail->next = new_node;
+			new_node->parent = q->tail;
+			q->tail = new_node;
+			q->size = q->size+1;
+			index = index - 1;//need to go back one to deal with going past the last node
+		}
+		else if( index == 0)
+		{
+			q->head->parent = new_node;
+			new_node->next = q->head;
+			q->head = new_node;
+			q->size = q->size +1;
+		}
+		else
+		{
+			struct node_t* previous = current_node->parent;
+			previous->next = new_node;
+			new_node->parent = previous;
+			new_node->next = current_node;
+			current_node->parent = new_node;
+			q->size = q->size + 1;
+		}
+	}
+	return (index);
 }
 
 
@@ -55,7 +128,7 @@ void *priqueue_peek(priqueue_t *q)
 	else
 	{
 		void* data = q -> head -> value;
-		return value;
+		return data;
 	}
 }
 
@@ -85,8 +158,14 @@ void *priqueue_poll(priqueue_t *q)
 	else
 	{
 		struct node_t* temp = q -> head;
+<<<<<<< HEAD
 		q -> head = q -> head -> next;
 		free (q -> head);
+=======
+		q -> head = temp -> next;
+		free (temp);
+		temp = NULL;
+>>>>>>> john
 		q -> size--;
 		return data;
 	}
@@ -119,7 +198,11 @@ void *priqueue_at(priqueue_t *q, int index)
 		{
 			temp = temp -> next;
 		}
+<<<<<<< HEAD
 		return temp -> data;;
+=======
+		return temp -> value;
+>>>>>>> john
 		}
 }
 
@@ -135,7 +218,7 @@ void *priqueue_at(priqueue_t *q, int index)
  */
 int priqueue_remove(priqueue_t *q, void *ptr)
 {
-	return 0;
+
 }
 
 
@@ -150,7 +233,42 @@ int priqueue_remove(priqueue_t *q, void *ptr)
  */
 void *priqueue_remove_at(priqueue_t *q, int index)
 {
-	return 0;
+	if (index >= q->size || index < 0 || q->size == 0)
+	{
+		return (NULL);
+	}
+	else
+	{
+		struct node_t* current_node = q->head;
+		
+		for (int i = 0; i < index; i++)
+		{
+			current_node = current_node->next;
+		}
+		
+		void *return_value = current_node->value;
+		
+		if (index == 0)//remove head
+		{
+			q->head = q->head->next;
+			q->head->parent = NULL;
+		}
+		else if(index == (q->size -1))//remove tail
+		{
+			q->tail = q->tail->parent;
+			q->tail->next = NULL;
+		}
+		else
+		{
+			struct node_t* previous_node = current_node->parent;
+			struct node_t* next_node = current_node->next;
+			previous_node->next = next_node;
+			next_node->parent = previous_node;
+		}
+		free(current_node);
+		return (return_value);
+	}
+	return(NULL);
 }
 
 
@@ -162,7 +280,7 @@ void *priqueue_remove_at(priqueue_t *q, int index)
  */
 int priqueue_size(priqueue_t *q)
 {
-	return 0;
+	return (q->size);
 }
 
 
@@ -173,5 +291,8 @@ int priqueue_size(priqueue_t *q)
  */
 void priqueue_destroy(priqueue_t *q)
 {
-
+	while (q -> size != 0)
+	{
+		priqueue_poll(q);
+	}
 }

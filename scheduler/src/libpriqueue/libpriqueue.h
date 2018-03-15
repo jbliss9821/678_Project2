@@ -7,8 +7,8 @@
 struct node_t
 {
   void* value;
-  struct node_t* next;
-  struct node_t* parent;
+  struct node_t* next;//points to next node
+  struct node_t* parent;//points to previous node
 }
 
 /**
@@ -16,7 +16,8 @@ struct node_t
 */
 typedef struct _priqueue_t
 {
-  struct node_t* head;
+  struct node_t* head;//points to the first object in the queue
+  struct node_t* tail;//points to last object in queue
   int size;
   int (*compare)(const void*, const void*);
 } priqueue_t;
