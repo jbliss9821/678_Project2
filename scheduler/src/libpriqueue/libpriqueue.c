@@ -241,12 +241,35 @@ void *priqueue_remove_at(priqueue_t *q, int index)
 	else
 	{
 		struct node_t* current_node = q->head;
+		
 		for (int i = 0; i < index; i++)
 		{
 			current_node = current_node->next;
 		}
+		
+		void *return_value = current_node->value;
+		
+		if (index == 0)//remove head
+		{
+			q->head = q->head->next;
+			q->head->parent = NULL;
+		}
+		else if(index == (q->size -1))//remove tail
+		{
+			q->tail = q->tail->parent;
+			q->tail->next = NULL;
+		}
+		else
+		{
+			struct node_t* previous_node = current_node->parent;
+			struct node_t* next_node = current_node->next;
+			previous_node->next = next_node;
+			next_node->parent = previous_node;
+		}
+		free(current_node);
+		return (return_value);
 	}
-	return 0;
+	return(NULL);
 }
 
 
