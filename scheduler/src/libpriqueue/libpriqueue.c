@@ -128,7 +128,7 @@ void *priqueue_peek(priqueue_t *q)
 	else
 	{
 		void* data = q -> head -> value;
-		return value;
+		return data;
 	}
 }
 
@@ -192,7 +192,7 @@ void *priqueue_at(priqueue_t *q, int index)
 		{
 			temp = temp -> next;
 		}
-		return temp -> data;;
+		return temp -> value;
 		}
 }
 
@@ -208,7 +208,18 @@ void *priqueue_at(priqueue_t *q, int index)
  */
 int priqueue_remove(priqueue_t *q, void *ptr)
 {
-	return 0;
+	int remove_count = 0;
+	void *remove_value = ptr;
+	if (p->size == 0)
+	{
+		return (0);
+	}
+	for (int i = 0; i < q->size; i++)
+	{
+		
+	}
+	
+	return (remove_count);
 }
 
 
@@ -246,5 +257,8 @@ int priqueue_size(priqueue_t *q)
  */
 void priqueue_destroy(priqueue_t *q)
 {
-
+	for (int i = 0; i < q->size; i++)
+	{
+		priqueue_poll(q);
+	}
 }
