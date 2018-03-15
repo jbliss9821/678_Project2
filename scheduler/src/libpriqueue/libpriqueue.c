@@ -6,6 +6,15 @@
 
 #include "libpriqueue.h"
 
+/**
+struct node_t
+{
+  void* value;
+  struct node_t* next;
+  struct node_t* parent;
+}
+*/
+
 
 /**
   Initializes the priqueue_t data structure.
@@ -21,6 +30,7 @@ void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))
 {
 	q -> size = 0;
 	q -> head = NULL;
+	q -> tail = NULL;
 	q -> compare = comparer;
 }
 
@@ -34,6 +44,23 @@ void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))
  */
 int priqueue_offer(priqueue_t *q, void *ptr)
 {
+	struct node_t* new_node = malloc(sizeof( struct node_t));
+	new_node->value = ptr;
+	new_node->parent = NULL;
+	new_node->next = NULL;
+	
+	if (q->head == NULL)
+	{
+		q->head = new_node;
+		q->tail = new_node;
+		q->size = q->size + 1;
+		return 0;
+	}
+	else
+	{
+		//call compare with nodes to find where it goes
+		//return location 
+	}
 	return -1;
 }
 
@@ -127,7 +154,7 @@ void *priqueue_remove_at(priqueue_t *q, int index)
  */
 int priqueue_size(priqueue_t *q)
 {
-	return 0;
+	return q->size;
 }
 
 
