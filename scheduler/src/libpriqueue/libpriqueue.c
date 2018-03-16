@@ -198,11 +198,8 @@ void *priqueue_at(priqueue_t *q, int index)
 		{
 			temp = temp -> next;
 		}
-<<<<<<< HEAD
-		return temp -> data;;
-=======
 		return temp -> value;
->>>>>>> john
+
 		}
 }
 
