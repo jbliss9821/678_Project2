@@ -209,7 +209,26 @@ void *priqueue_at(priqueue_t *q, int index)
  */
 int priqueue_remove(priqueue_t *q, void *ptr)
 {
-
+	int remove_count = 0;
+	if (q->size == 0 || ptr == NULL)
+	{
+		remove_count = 0;
+	}
+	else
+	{
+		struct node_t* current_node = q->head;
+		int* remove_value = (int*)ptr;//coerce into int
+		for (int i = 0; i < q->size; i++)
+		{
+			int* current_value = (int*)current_node->value;
+			if (current_value == remove_value)
+			{
+				priqueue_remove_at(q, i);
+				remove_count++;
+			}
+		}
+	}
+	return (remove_count);	
 }
 
 
