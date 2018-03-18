@@ -20,4 +20,11 @@ void  scheduler_clean_up               ();
 
 void  scheduler_show_queue             ();
 
+int compare_fcfs(const void* a, const void* b);//-1 means a has higher priority, 1 means b has a higher priority
+int compare_sjf(const void* a, const void* b);
+int compare_psjf(const void* a, const void* b);
+int compare_pri(const void* a, const void* b);
+int compare_ppri(const void* a, const void* b);
+int compare_rr(const void* a, const void* b);
+
 #endif /* LIBSCHEDULER_H_ */

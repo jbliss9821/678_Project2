@@ -16,7 +16,12 @@
 */
 typedef struct _job_t
 {
-
+	int job_id;
+	int arrival_time;
+	int running_time;
+	int remaining_time;
+	int priority;
+	
 } job_t;
 
 
@@ -169,3 +174,177 @@ void scheduler_show_queue()
 {
 
 }
+
+/**
+Compare Functions
+*/
+
+int compare_fcfs(const void* a, const void* b)//-1 means a has higher priority, 1 means b has a higher priority
+{
+	job_t job_a = *((job_t*)a);
+	job_t job_b = *((job_t*)b);
+	if (job_a.arrival_time < job_b.arrival_time)
+	{
+		return(-1);
+	}
+	else if (job_a.arrival_time > job_b.arrival_time)
+	{
+		return(1);
+	}
+	else
+	{
+		return(0);
+	}
+}
+
+int compare_sjf(const void* a, const void* b)
+{
+	job_t job_a = *((job_t*)a);
+	job_t job_b = *((job_t*)b);
+	if(job_a.running_time < job_b.running_time)
+	{
+		return(-1);
+	}
+	else if (job_a.running_time > job_b.running_time)
+	{
+		return(1);
+	}
+	else
+	{
+		if (job_a.arrival_time < job_b.arrival_time)
+		{
+			return(-1);
+		}
+		else if (job_a.arrival_time > job_b.arrival_time)
+		{
+			return(1);
+		}
+		else
+		{
+			return (0);
+		}
+	}
+}
+
+int compare_psjf(const void* a, const void* b)
+{
+	job_t job_a = *((job_t*)a);
+	job_t job_b = *((job_t*)b);	
+	if(job_a.remaining_time < job_b.remaining_time)
+	{
+		return(-1);
+	}
+	else if (job_a.remaining_time > job_b.remaining_time)
+	{
+		return(1);
+	}
+	else
+	{
+		return(0);
+	}
+}
+
+int compare_pri(const void* a, const void* b)
+{
+	job_t job_a = *((job_t*)a);
+	job_t job_b = *((job_t*)b);
+	
+	if(job_a.priority < job_b.priority)
+	{
+		return(-1);
+	}
+	else if (job_a.priority > job_b.priority)
+	{
+		return(1);
+	}
+	else
+	{
+		if (job_a.arrival_time < job_b.arrival_time)
+		{
+			return(-1);
+		}
+		else if (job_a.arrival_time > job_b.arrival_time)
+		{
+			return(1);
+		}
+		else
+		{
+			return (0);
+		}
+	}
+}
+
+int compare_ppri(const void* a, const void* b)
+{
+	job_t job_a = *((job_t*)a);
+	job_t job_b = *((job_t*)b);	
+	
+	if(job_a.priority < job_b.priority)
+	{
+		return(-1);
+	}
+	else if (job_a.priority > job_b.priority)
+	{
+		return(1);
+	}
+	else
+	{
+		if (job_a.arrival_time < job_b.arrival_time)
+		{
+			return(-1);
+		}
+		else if (job_a.arrival_time > job_b.arrival_time)
+		{
+			return(1);
+		}
+		else
+		{
+			return (0);
+		}
+	}	
+}
+
+int compare_rr(const void* a, const void* b)
+{
+	job_t job_a = *((job_t*)a);
+	job_t job_b = *((job_t*)b);
+	
+	if (job_a.arrival_time < job_b.arrival_time)
+	{
+		return(-1);
+	}
+	else if (job_a.arrival_time > job_b.arrival_time)
+	{
+		return(1);
+	}
+	else
+	{
+		return(0);
+	}	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//
