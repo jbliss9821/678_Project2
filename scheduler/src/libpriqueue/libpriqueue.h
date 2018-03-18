@@ -4,12 +4,12 @@
 #ifndef LIBPRIQUEUE_H_
 #define LIBPRIQUEUE_H_
 
-struct node_t
+typedef struct node_t
 {
   void* value;
   struct node_t* next;//points to next node
   struct node_t* parent;//points to previous node
-}
+} node_t;
 
 /**
   Priqueue Data Structure
