@@ -244,9 +244,14 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 int scheduler_job_finished(int core_id, int job_number, int time)
 {
 	//TODO: when putting in a new job from the queue, adjust the turnaround time if it hasn't been scheduled yet
-	//if job->turnaround_time == -1, turnaround_time = time - job->arrival_time;
+	//if next_job->turnaround_time == -1, next_job->turnaround_time = time - next_job->arrival_time;
+	//TODO: when a job finishes, adjust the response time
+	//job->response_time = time - job->arrival_time
 	
 	//TODO: when a job finishes, add the times to the total times for the schedule
+	//schedule.total_response = schedule.total_response + job->response_time;
+	//schedule.total_wait = schedule.total_wait + job->waiting_time;
+	//schedule.total_turnaround = schedule.total_turnaround + job->turnaround_time;
 	return -1;
 }
 
@@ -279,7 +284,18 @@ int scheduler_quantum_expired(int core_id, int time)
  */
 float scheduler_average_waiting_time()
 {
-	return 0.0;
+	float avg_wait = 0.0;
+	
+	if (schedule.num_jobs == 0)
+	{
+		avg_wait = 0.0;
+	}
+	else
+	{
+		avg_wait = schedule.total_wait / schedule.num_jobs;
+	}
+	
+	return (avg_wait);
 }
 
 
@@ -292,7 +308,18 @@ float scheduler_average_waiting_time()
  */
 float scheduler_average_turnaround_time()
 {
-	return 0.0;
+	float avg_turnaround = 0.0;
+	
+	if (schedule.num_jobs == 0)
+	{
+		avg_turnaround = 0.0;
+	}
+	else
+	{
+		avg_turnaround = schedule.total_turnaround / schedule.num_jobs;
+	}
+	
+	return (avg_turnaround);
 }
 
 
@@ -305,7 +332,18 @@ float scheduler_average_turnaround_time()
  */
 float scheduler_average_response_time()
 {
-	return 0.0;
+	float avg_response = 0.0;
+	
+	if (schedule.num_jobs == 0)
+	{
+		avg_response = 0.0;
+	}
+	else
+	{
+		avg_response = schedule.total_response / schedule.num_jobs;
+	}
+	
+	return (avg_response);
 }
 
 
