@@ -17,9 +17,9 @@
 typedef struct _core
 {
 	int busy;//1 busy, 0 not busy
-	job_t current_job;
-	
-}core_t;
+	job_t* current_job;
+
+}core;
 
 typedef struct _job_t
 {
@@ -130,6 +130,86 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 	//keep track of each running time as the new time for the next job comes in
 	//need an array jobs that are in to keep track of times
 	//keep track of: wait time turnaround time, response time
+	
+	//TODO: update times based on time provided here
+	
+	//new job creation
+	job_t* new_job = malloc(sizeof(job_t));
+	new_job.job_id = job_number;
+	new_job.arrival_time = time;
+	new_job.running_time = running_time;
+	new_job.priority = priority;//(The lower the value, the higher the priority.)
+	
+	//finding a core
+	int core_to_use = -1;//-1 means no core found
+	
+	//preemption variables
+	int swap = 0;//0 to not swap/preempt, 1 to swap/preempt
+	int core_to_swap = -1;//the index of the core that will be preempted
+	job_t* job_to_swap = NULL;//pointer to job to be preempted
+	int job_to_swap_remaining_time = -1;
+	int job_to_swap_priority = -1;
+	
+	for (int i = schedule.num_cores-1; i >= 0; i--)//work towards lower index core for core selection
+	{
+		if (schedule.core_array[i].busy == 0)
+		{
+			core_to_use = i;
+		}
+	}
+	
+	if(core_to_use != -1)//if there was a non busy core
+	{
+		return(core_to_use);
+	}
+	else//no open core was found, need to check for preemption or add to queue
+	{
+		//check for preemption
+		if (schedule.scheme == PSJF)
+		{
+			//search cores for a job with a longer remaining_time
+			//if a longer remaining time is found, replace it with the current job
+			for (int i = schedule.num_cores-1; i >= 0; i--)
+			{
+				job_to_swap = schedule.core_array[i].current_job;
+				if (job_to_swap.remaining_time > new_job.running_time && job_to_swap.remaining_time > job_to_swap_remaining_time)
+				{
+					//if it is greater than the current job run time
+					//and if it is bigger than the current job to swap running time(it should be the job with the most remaining time)
+					core_to_swap = i;
+					job_to_swap_remaining_time = job_to_swap.remaining_time;
+					swap = 1;//can swap now since a core that can be preempted has been found
+				}
+			}
+		}
+		else if(schedule.scheme == PPRI)
+		{
+			//search for a job with a lower priority
+			//if a lower priority job is found, replace with the current job
+			for (int i = schedule.num_cores-1; i >= 0; i--)
+			{
+				job_to_swap = schedule.core_array[i].current_job;
+				if (job_to_swap.priority > new_job.priority && job_to_swap.priority > job_to_swap_priority)
+				{
+					//if job to swap priority is lower (has a larger value)
+					//and if job to swap priority is lower(has a larger value) than the current job to swap priority(it should be the job with the lowest priority)
+					core_to_swap = i;
+					job_to_swap_priority = job_to_swap.priority;
+					swap = 1;//can swap now since a core that can be preempted has been found
+				}
+			}			
+		}
+		
+		if (swap == 1)//if can swap, swap
+		{
+			
+		}
+		else//if not, queue
+		{
+			
+		}
+	}
+	
 	return -1;
 }
 
