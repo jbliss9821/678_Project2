@@ -14,6 +14,13 @@
 
   You may need to define some global variables or a struct to store your job queue elements. 
 */
+typedef struct _core
+{
+	int busy;//1 busy, 0 not busy
+	job_t current_job;
+	
+}core_t;
+
 typedef struct _job_t
 {
 	int job_id;
@@ -24,6 +31,21 @@ typedef struct _job_t
 	
 } job_t;
 
+typedef struct _scheduler_instance
+{
+	int num_jobs;
+	int num_cores;
+	float total_wait;
+	float total_turnaround;
+	float total_response;
+	scheme_t scheme;
+	priqueue_t queue;
+	core* core_array;
+	
+} scheduler_instance;
+
+
+scheduler_instance schedule;
 
 /**
   Initalizes the scheduler.
@@ -37,9 +59,49 @@ typedef struct _job_t
   @param cores the number of cores that is available by the scheduler. These cores will be known as core(id=0), core(id=1), ..., core(id=cores-1).
   @param scheme  the scheduling scheme that should be used. This value will be one of the six enum values of scheme_t
 */
-void scheduler_start_up(int cores, scheme_t scheme)
+void scheduler_start_up(int cores, scheme_t scheme_in)
 {
-
+	schedule.total_response = 0;
+	schedule.total_turnaround = 0;
+	schedule.total_wait = 0;
+	schedule.num_jobs = 0;
+	schedule.num_cores = cores;
+	schedule.scheme = scheme_in;
+	schedule.core_array = malloc(sizeof(core) * schedule.num_cores);
+	for (int i = 0; i < schedule.num_cores; i++)
+	{
+		schedule.core_array[i].busy = 0;
+		schedule.core_array[i].current_job = NULL;
+	}
+	
+	if (scheme_in == FCFS)
+	{
+		priqueue_init(&(schedule.queue), compare_fcfs);
+	}
+	else if(scheme_in == SJF)
+	{
+		priqueue_init(&(schedule.queue), compare_sjf);
+	}
+	else if(scheme_in == PSJF)
+	{
+		priqueue_init(&(schedule.queue), compare_psjf);
+	}
+	else if(scheme_in == PRI)
+	{
+		priqueue_init(&(schedule.queue), compare_pri);
+	}
+	else if(scheme_in == PPRI)
+	{
+		priqueue_init(&(schedule.queue), compare_ppri);
+	}
+	else if(scheme_in == RR)
+	{
+		priqueue_init(&(schedule.queue), compare_rr);
+	}
+	else//default to FCFS
+	{
+		priqueue_init(&(schedule.queue), compare_fcfs);
+	}
 }
 
 
@@ -65,6 +127,9 @@ void scheduler_start_up(int cores, scheme_t scheme)
  */
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
+	//keep track of each running time as the new time for the next job comes in
+	//need an array jobs that are in to keep track of times
+	//keep track of: wait time turnaround time, response time
 	return -1;
 }
 
