@@ -242,13 +242,13 @@ int scheduler_job_finished(int core_id, int job_number, int time)
 {
 	job_t* current_job = Priqueue_poll(&schedule.queue);
 
+	//TODO: when a job finishes, adjust the response time
+	current_job->response_time = time - current_job->arrival_time
+
 	//TODO: when a job finishes, add the times to the total times for the schedule
 	schedule.total_response = schedule.total_response + current_job->response_time;
 	schedule.total_wait = schedule.total_wait + current_job->waiting_time;
 	schedule.total_turnaround = schedule.total_turnaround + current_job->turnaround_time;
-
-	//TODO: when a job finishes, adjust the response time
-	current_job->response_time = time - current_job->arrival_time
 
 	priqueue.remove(&schedule.queue, current_job);
 	Free(current_job);
