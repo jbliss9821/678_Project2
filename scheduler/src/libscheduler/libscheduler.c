@@ -30,6 +30,7 @@ typedef struct _job_t
 	int waiting_time;
 	int turnaround_time;
 	int priority;
+	int active_core;
 	
 } job_t;
 
@@ -135,7 +136,6 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 	//need an array jobs that are in to keep track of times
 	//keep track of: wait time turnaround time, response time
 	
-	//TODO: update times based on time provided here (using a new function)
 	update_times(time);
 	
 	//new job creation
@@ -146,6 +146,10 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 	new_job->waiting_time = 0;
 	new_job->turnaround_time = -1;
 	new_job->priority = priority;//(The lower the value, the higher the priority.)
+	new_job->active_core = -1; //-1 is no core
+	
+	//queue the job
+	priqueue_offer(&schedule.queue, new_job);
 	
 	//finding a core
 	int core_to_use = -1;//-1 means no core found
@@ -167,6 +171,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 	
 	if(core_to_use != -1)//if there was a non busy core, put that ish in 
 	{
+		new_job->active_core = core_to_use;
 		new_job->turnaround_time = 0;
 		return(core_to_use);
 	}
@@ -212,13 +217,13 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 		{
 			job_to_swap = schedule.core_array[core_to_swap].current_job;
 			schedule.core_array[core_to_swap].current_job = new_job;
-			priqueue_offer(&schedule.queue, job_to_swap);
 			new_job->turnaround_time = 0;//turnaround is 0 since the job is getting scheduled now
+			new_job->active_core = core_to_swap;
+			job_to_swap->active_core = -1;//preempted job goes back to inactive
 			return(core_to_swap);
 		}
-		else//if no swap available for preemption or not a preemption scheme, queue the new job
+		else//if no swap available for preemption or not a preemption scheme return -1
 		{
-			priqueue_offer(&schedule.queue, new_job);
 			return (-1);//no core to use
 		}
 	}
@@ -252,7 +257,40 @@ int scheduler_job_finished(int core_id, int job_number, int time)
 	//schedule.total_response = schedule.total_response + job->response_time;
 	//schedule.total_wait = schedule.total_wait + job->waiting_time;
 	//schedule.total_turnaround = schedule.total_turnaround + job->turnaround_time;
-	return -1;
+	int core_return = -1;
+	
+	//update times
+	update_times(time);
+	
+	//update finished job counts
+	schedule.num_jobs = schedule.num_jobs + 1;
+	
+	//grab the finished job and update finished job times
+	job_t* finished_job = schedule.core_array[core_id].current_job;
+	finished_job->response_time = time - finished_job->arrival_time;
+	
+	//remove job from the queue and core
+	priqueue_remove(&schedule.queue, finished_job);
+	schedule.core_array[core_id].current_job = NULL;
+	schedule.core_array[core_id].busy = 0;
+	
+	//update total times
+	schedule.total_response = schedule.total_response + finished_job->response_time;
+	schedule.total_wait = schedule.total_wait + finished_job->waiting_time;
+	schedule.total_turnaround = schedule.total_turnaround + finished_job->turnaround_time;
+	
+	if (priqueue_size(schedule.queue) != 0)
+	{
+		//grab next job in the queue
+		//update the job to active_core
+		//update the turnaround time if the current turnaround time is negative
+	}
+	else
+	{
+		core_return = -1;
+	}
+	
+	return (core_return);
 }
 
 
@@ -363,7 +401,9 @@ void scheduler_clean_up()
   This function may print out any debugging information you choose. This
   function will be called by the simulator after every call the simulator
   makes to your scheduler.
-  In our provided output, we have implemented this function to list the jobs in the order they are to be scheduled. Furthermore, we have also listed the current state of the job (either running on a given core or idle). For example, if we have a non-preemptive algorithm and job(id=4) has began running, job(id=2) arrives with a higher priority, and job(id=1) arrives with a lower priority, the output in our sample output will be:
+  In our provided output, we have implemented this function to list the jobs in the order they are to be scheduled. 
+  Furthermore, we have also listed the current state of the job (either running on a given core or idle). 
+  For example, if we have a non-preemptive algorithm and job(id=4) has began running, job(id=2) arrives with a higher priority, and job(id=1) arrives with a lower priority, the output in our sample output will be:
 
     2(-1) 4(0) 1(-1)  
   
