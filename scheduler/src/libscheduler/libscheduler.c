@@ -250,13 +250,8 @@ int scheduler_job_finished(int core_id, int job_number, int time)
 {
 	//TODO: when putting in a new job from the queue, adjust the turnaround time if it hasn't been scheduled yet
 	//if next_job->turnaround_time == -1, next_job->turnaround_time = time - next_job->arrival_time;
-	//TODO: when a job finishes, adjust the response time
-	//job->response_time = time - job->arrival_time
+	job_t* next_job = NULL;
 	
-	//TODO: when a job finishes, add the times to the total times for the schedule
-	//schedule.total_response = schedule.total_response + job->response_time;
-	//schedule.total_wait = schedule.total_wait + job->waiting_time;
-	//schedule.total_turnaround = schedule.total_turnaround + job->turnaround_time;
 	int core_return = -1;
 	
 	//update times
@@ -279,11 +274,35 @@ int scheduler_job_finished(int core_id, int job_number, int time)
 	schedule.total_wait = schedule.total_wait + finished_job->waiting_time;
 	schedule.total_turnaround = schedule.total_turnaround + finished_job->turnaround_time;
 	
-	if (priqueue_size(schedule.queue) != 0)
+	//find next job
+	int queue_size = priqueue_size(&schedule.queue);
+	
+	if (queue_size != 0)
 	{
 		//grab next job in the queue
 		//update the job to active_core
-		//update the turnaround time if the current turnaround time is negative
+		for(int i = 0; i < queue_size; i++)
+		{
+			next_job =(job_t*)(priqueue_at(&schedule.queue, i);
+			if (next_job->active_core == -1)
+			{
+				break;
+			}
+			else
+			{
+				next_job = NULL;
+				core_return = -1;
+			}
+		}
+
+		if (next_job != NULL)
+		{
+			if (next_job->turnaround_time == -1)
+			{
+				next_job->turnaround_time = time - next_job->arrival_time;
+				core_return = next_job->job_id;
+			}
+		}
 	}
 	else
 	{
