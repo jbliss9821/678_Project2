@@ -27,6 +27,8 @@ typedef struct _job_t
 	int arrival_time;
 	int running_time;
 	int remaining_time;
+	int waiting_time;
+	int turnaround_time;
 	int priority;
 	
 } job_t;
@@ -38,6 +40,7 @@ typedef struct _scheduler_instance
 	float total_wait;
 	float total_turnaround;
 	float total_response;
+	int previous_time;
 	scheme_t scheme;
 	priqueue_t queue;
 	core* core_array;
@@ -64,6 +67,7 @@ void scheduler_start_up(int cores, scheme_t scheme_in)
 	schedule.total_response = 0;
 	schedule.total_turnaround = 0;
 	schedule.total_wait = 0;
+	schedule.previous_time = 0;
 	schedule.num_jobs = 0;
 	schedule.num_cores = cores;
 	schedule.scheme = scheme_in;
@@ -136,10 +140,12 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 	
 	//new job creation
 	job_t* new_job = malloc(sizeof(job_t));
-	new_job.job_id = job_number;
-	new_job.arrival_time = time;
-	new_job.running_time = running_time;
-	new_job.priority = priority;//(The lower the value, the higher the priority.)
+	new_job->job_id = job_number;
+	new_job->arrival_time = time;
+	new_job->running_time = running_time;
+	new_job->waiting_time = 0;
+	new_job->turnaround_time = -1;
+	new_job->priority = priority;//(The lower the value, the higher the priority.)
 	
 	//finding a core
 	int core_to_use = -1;//-1 means no core found
@@ -159,8 +165,9 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 		}
 	}
 	
-	if(core_to_use != -1)//if there was a non busy core
+	if(core_to_use != -1)//if there was a non busy core, put that ish in 
 	{
+		new_job->turnaround_time = 0;
 		return(core_to_use);
 	}
 	else//no open core was found, need to check for preemption or add to queue
@@ -173,12 +180,12 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 			for (int i = schedule.num_cores-1; i >= 0; i--)
 			{
 				job_to_swap = schedule.core_array[i].current_job;
-				if (job_to_swap.remaining_time > new_job.running_time && job_to_swap.remaining_time > job_to_swap_remaining_time)
+				if (job_to_swap->remaining_time > new_job->running_time && job_to_swap->remaining_time > job_to_swap_remaining_time)
 				{
 					//if it is greater than the current job run time
 					//and if it is bigger than the current job to swap running time(it should be the job with the most remaining time)
 					core_to_swap = i;
-					job_to_swap_remaining_time = job_to_swap.remaining_time;
+					job_to_swap_remaining_time = job_to_swap->remaining_time;
 					swap = 1;//can swap now since a core that can be preempted has been found
 				}
 			}
@@ -190,12 +197,12 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 			for (int i = schedule.num_cores-1; i >= 0; i--)
 			{
 				job_to_swap = schedule.core_array[i].current_job;
-				if (job_to_swap.priority > new_job.priority && job_to_swap.priority > job_to_swap_priority)
+				if (job_to_swap->priority > new_job->priority && job_to_swap->priority > job_to_swap_priority)
 				{
 					//if job to swap priority is lower (has a larger value)
 					//and if job to swap priority is lower(has a larger value) than the current job to swap priority(it should be the job with the lowest priority)
 					core_to_swap = i;
-					job_to_swap_priority = job_to_swap.priority;
+					job_to_swap_priority = job_to_swap->priority;
 					swap = 1;//can swap now since a core that can be preempted has been found
 				}
 			}			
@@ -206,6 +213,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 			job_to_swap = schedule.core_array[core_to_swap].current_job;
 			schedule.core_array[core_to_swap].current_job = new_job;
 			priqueue_offer(&schedule.queue, job_to_swap);
+			new_job->turnaround_time = 0;//turnaround is 0 since the job is getting scheduled now
 			return(core_to_swap);
 		}
 		else//if no swap available for preemption or not a preemption scheme, queue the new job
@@ -235,6 +243,10 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
  */
 int scheduler_job_finished(int core_id, int job_number, int time)
 {
+	//TODO: when putting in a new job from the queue, adjust the turnaround time if it hasn't been scheduled yet
+	//if job->turnaround_time == -1, turnaround_time = time - job->arrival_time;
+	
+	//TODO: when a job finishes, add the times to the total times for the schedule
 	return -1;
 }
 
@@ -475,6 +487,17 @@ int compare_rr(const void* a, const void* b)
 
 void update_times(int time_in)
 {
+	int time_dif = time_in - schedule.previous_time;
+	schedule.previous_time = time_in;
+	
+	for (int i = 0; i < priqueue_size(&schedule.queue); i++)
+	{
+		job_t* temp_job = (job_t*)(priqueue_at(&schedule.queue, i));
+		if (temp_job != NULL)
+		{
+			temp_job->waiting_time = temp_job->waiting_time + time_diff;
+		}
+	}
 	
 }
 

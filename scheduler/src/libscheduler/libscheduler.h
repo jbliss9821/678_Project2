@@ -13,9 +13,9 @@ void  scheduler_start_up               (int cores, scheme_t scheme_in);
 int   scheduler_new_job                (int job_number, int time, int running_time, int priority);
 int   scheduler_job_finished           (int core_id, int job_number, int time);
 int   scheduler_quantum_expired        (int core_id, int time);
-float scheduler_average_turnaround_time();
-float scheduler_average_waiting_time   ();
-float scheduler_average_response_time  ();
+float scheduler_average_turnaround_time();//time between arrival and first schedule
+float scheduler_average_waiting_time   ();//time waiting in queue, update each time we receive a job or finish a job
+float scheduler_average_response_time  ();//time from arrival to time finished, take time at finish and subtract arrival time
 void  scheduler_clean_up               ();
 
 void  scheduler_show_queue             ();
