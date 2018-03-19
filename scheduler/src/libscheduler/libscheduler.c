@@ -131,7 +131,8 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 	//need an array jobs that are in to keep track of times
 	//keep track of: wait time turnaround time, response time
 	
-	//TODO: update times based on time provided here
+	//TODO: update times based on time provided here (using a new function)
+	update_times(time);
 	
 	//new job creation
 	job_t* new_job = malloc(sizeof(job_t));
@@ -200,13 +201,17 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 			}			
 		}
 		
-		if (swap == 1)//if can swap, swap
+		if (swap == 1 && core_to_swap != -1)//if can swap, swap
 		{
-			
+			job_to_swap = schedule.core_array[core_to_swap].current_job;
+			schedule.core_array[core_to_swap].current_job = new_job;
+			priqueue_offer(&schedule.queue, job_to_swap);
+			return(core_to_swap);
 		}
-		else//if not, queue
+		else//if no swap available for preemption or not a preemption scheme, queue the new job
 		{
-			
+			priqueue_offer(&schedule.queue, new_job);
+			return (-1);//no core to use
 		}
 	}
 	
@@ -466,6 +471,11 @@ int compare_rr(const void* a, const void* b)
 	{
 		return(0);
 	}	
+}
+
+void update_times(int time_in)
+{
+	
 }
 
 

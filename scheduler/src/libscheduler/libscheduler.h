@@ -27,4 +27,6 @@ int compare_pri(const void* a, const void* b);
 int compare_ppri(const void* a, const void* b);
 int compare_rr(const void* a, const void* b);
 
+void update_times(int time_in);
+
 #endif /* LIBSCHEDULER_H_ */
