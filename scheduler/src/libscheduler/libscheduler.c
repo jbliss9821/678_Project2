@@ -328,6 +328,9 @@ int scheduler_job_finished(int core_id, int job_number, int time)
  */
 int scheduler_quantum_expired(int core_id, int time)
 {
+	job_t* old_job = schedule.core_array[core_id].current_job;
+	old_job->arrival_time = time;//reset to back of queue
+	old_job->active_core = -1;//not active
 	return -1;
 }
 
