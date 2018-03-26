@@ -329,9 +329,49 @@ int scheduler_job_finished(int core_id, int job_number, int time)
 int scheduler_quantum_expired(int core_id, int time)
 {
 	job_t* old_job = schedule.core_array[core_id].current_job;
-	old_job->arrival_time = time;//reset to back of queue
+	old_job->arrival_time = time;//reset time to be able to get it to back of queue
 	old_job->active_core = -1;//not active
-	return -1;
+	priqueue_remove(&schedule.queue, old_job);
+	priqueue_offer(&schedule.queue, old_job);
+	schedule.core_array[core_id].current_job = NULL;//no job
+	schedule.core_array[core_id].busy = 0;//not busy
+	
+	int core_return = -1;
+	job_t* next_job = NULL;
+	
+	if (queue_size != 0)
+	{
+		//grab next job in the queue
+		//update the job to active_core
+		for(int i = 0; i < queue_size; i++)
+		{
+			next_job =(job_t*)(priqueue_at(&schedule.queue, i);
+			if (next_job->active_core == -1)
+			{
+				break;
+			}
+			else
+			{
+				next_job = NULL;
+				core_return = -1;
+			}
+		}
+
+		if (next_job != NULL)
+		{
+			if (next_job->turnaround_time == -1)
+			{
+				next_job->turnaround_time = time - next_job->arrival_time;
+				core_return = next_job->job_id;
+			}
+		}
+	}
+	else
+	{
+		core_return = -1;
+	}	
+	
+	return (core_return);
 }
 
 
