@@ -14,13 +14,6 @@
 
   You may need to define some global variables or a struct to store your job queue elements. 
 */
-typedef struct _core
-{
-	int busy;//1 busy, 0 not busy
-	job_t* current_job;
-
-}core;
-
 typedef struct _job_t
 {
 	int job_id;
@@ -28,11 +21,20 @@ typedef struct _job_t
 	int running_time;
 	int remaining_time;
 	int waiting_time;
+	int response_time;
 	int turnaround_time;
 	int priority;
 	int active_core;
 	
 } job_t;
+
+typedef struct _core
+{
+	int busy;//1 busy, 0 not busy
+	job_t* current_job;
+
+}core;
+
 
 typedef struct _scheduler_instance
 {
@@ -147,6 +149,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 	new_job->turnaround_time = -1;
 	new_job->priority = priority;//(The lower the value, the higher the priority.)
 	new_job->active_core = -1; //-1 is no core
+	new_job->response_time = 0;
 	
 	//queue the job
 	priqueue_offer(&schedule.queue, new_job);
@@ -283,7 +286,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
 		//update the job to active_core
 		for(int i = 0; i < queue_size; i++)
 		{
-			next_job =(job_t*)(priqueue_at(&schedule.queue, i);
+			next_job =(job_t*)(priqueue_at(&schedule.queue, i));
 			if (next_job->active_core == -1)
 			{
 				break;
@@ -338,6 +341,7 @@ int scheduler_quantum_expired(int core_id, int time)
 	
 	int core_return = -1;
 	job_t* next_job = NULL;
+	int queue_size = priqueue_size(&schedule.queue);
 	
 	if (queue_size != 0)
 	{
@@ -345,7 +349,7 @@ int scheduler_quantum_expired(int core_id, int time)
 		//update the job to active_core
 		for(int i = 0; i < queue_size; i++)
 		{
-			next_job =(job_t*)(priqueue_at(&schedule.queue, i);
+			next_job =(job_t*)(priqueue_at(&schedule.queue, i));
 			if (next_job->active_core == -1)
 			{
 				break;
@@ -627,7 +631,7 @@ int compare_rr(const void* a, const void* b)
 
 void update_times(int time_in)
 {
-	int time_dif = time_in - schedule.previous_time;
+	int time_diff = time_in - schedule.previous_time;
 	schedule.previous_time = time_in;
 	
 	for (int i = 0; i < priqueue_size(&schedule.queue); i++)
