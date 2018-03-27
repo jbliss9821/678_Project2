@@ -28,13 +28,14 @@ typedef struct _job_t
 	
 } job_t;
 
+/*
 typedef struct _core
 {
 	int busy;//1 busy, 0 not busy
 	job_t* current_job;
 
 }core;
-
+*/
 
 typedef struct _scheduler_instance
 {
@@ -46,7 +47,7 @@ typedef struct _scheduler_instance
 	int previous_time;
 	scheme_t scheme;
 	priqueue_t queue;
-	core* core_array;
+	job_t** core_array;
 	
 } scheduler_instance;
 
@@ -74,12 +75,12 @@ void scheduler_start_up(int cores, scheme_t scheme_in)
 	schedule->num_jobs = 0;
 	schedule->num_cores = cores;
 	schedule->scheme = scheme_in;
-	schedule->core_array = malloc(sizeof(core) * schedule->num_cores);
+	schedule->core_array = (job_t**)calloc(cores, sizeof(job_t*);
 	schedule->queue = malloc(sizeof(priqueue_t));
 	for (int i = 0; i < schedule->num_cores; i++)
 	{
-		schedule->core_array[i].busy = 0;
-		schedule->core_array[i].current_job = NULL;
+		schedule->core_array[i] = malloc(sizeof(job_t));
+		schedule->core_array[i] = NULL;
 	}
 	
 	if (scheme_in == FCFS)
@@ -158,16 +159,9 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 	//finding a core
 	int core_to_use = -1;//-1 means no core found
 	
-	//preemption variables
-	int swap = 0;//0 to not swap/preempt, 1 to swap/preempt
-	int core_to_swap = -1;//the index of the core that will be preempted
-	job_t* job_to_swap = NULL;//pointer to job to be preempted
-	int job_to_swap_remaining_time = -1;
-	int job_to_swap_priority = -1;
-	
 	for (int i = 0; i < schedule->num_cores; i++)
 	{
-		if (schedule->core_array[i].busy == 0)
+		if (schedule->core_array[i] == NULL)
 		{
 			core_to_use = i;
 			break;
@@ -187,47 +181,71 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 		{
 			//search cores for a job with a longer remaining_time
 			//if a longer remaining time is found, replace it with the current job
+			int core = 0;
 			for (int i = 0; i <  schedule->num_cores; i++)
 			{
-				job_to_swap = schedule->core_array[i].current_job;
-				if (job_to_swap->remaining_time > new_job->running_time && job_to_swap->remaining_time > job_to_swap_remaining_time)
+				if (schedule->core_array[i] != NULL)
 				{
-					//if it is greater than the current job run time
-					//and if it is bigger than the current job to swap running time(it should be the job with the most remaining time)
-					core_to_swap = i;
-					job_to_swap_remaining_time = job_to_swap->remaining_time;
-					swap = 1;//can swap now since a core that can be preempted has been found
+					if (schedule->core_array[i]->remaining_time > schedule->core_array[core]->remaining_time)
+					{
+						core = i;
+					}
+					else if(schedule->core_array[i]->remaining_time == schedule->core_array[core]->remaining_time)
+					{
+						if (schedule->core_array[i]->arrival_time > schedule->core_array[core]->arrival_time)
+						{
+							core = i;
+						}
+					}
 				}
 			}
+			if (schedule->core_array[core]->remaining_time <= new_job->remaining_time)
+			{
+				priqueue_offer(schedule->queue, new_job);
+				return -1;//no good core to preempt
+			}
+			new_job->response_time = 0;
+			job_t* old_job = schedule->core_array[core];
+			priqueue_offer(schedule->queue, old_job);
+			schedule->core_array[core] = new_job;
+			
+			return (core);
 		}
 		else if(schedule->scheme == PPRI)
 		{
 			//search for a job with a lower priority
 			//if a lower priority job is found, replace with the current job
-			for (int i = 0; i < schedule->num_cores; i++)
+			int core = 0;
+			for (int i = 0; i <  schedule->num_cores; i++)
 			{
-				job_to_swap = schedule->core_array[i].current_job;
-				if (job_to_swap->priority > new_job->priority && job_to_swap->priority > job_to_swap_priority)
+				if (schedule->core_array[i] != NULL)
 				{
-					//if job to swap priority is lower (has a larger value)
-					//and if job to swap priority is lower(has a larger value) than the current job to swap priority(it should be the job with the lowest priority)
-					core_to_swap = i;
-					job_to_swap_priority = job_to_swap->priority;
-					swap = 1;//can swap now since a core that can be preempted has been found
+					if (schedule->core_array[i]->priority > schedule->core_array[core]->priority)
+					{
+						core = i;
+					}
+					else if(schedule->core_array[i]->priority == schedule->core_array[core]->priority)
+					{
+						if (schedule->core_array[i]->arrival_time > schedule->core_array[core]->arrival_time)
+						{
+							core = i;
+						}
+					}
 				}
-			}			
+			}
+			if (schedule->core_array[core]->priority <= new_job->priority)
+			{
+				priqueue_offer(schedule->queue, new_job);
+				return -1;//no good core to preempt
+			}
+			new_job->response_time = 0;
+			job_t* old_job = schedule->core_array[core];
+			priqueue_offer(schedule->queue, old_job);
+			schedule->core_array[core] = new_job;
+			
+			return (core);			
 		}
 		
-		if (swap == 1 && core_to_swap != -1)//if can swap, swap
-		{
-			job_to_swap = schedule->core_array[core_to_swap].current_job;
-			schedule->core_array[core_to_swap].current_job = new_job;
-			new_job->response_time = 0;//turnaround is 0 since the job is getting scheduled now
-			new_job->active_core = core_to_swap;
-			job_to_swap->active_core = -1;//preempted job goes back to inactive
-			priqueue_offer(schedule->queue, job_to_swap);
-			return(core_to_swap);
-		}
 		else//if no swap available for preemption or not a preemption scheme return -1
 		{
 			priqueue_offer(schedule->queue, new_job);
@@ -268,13 +286,10 @@ int scheduler_job_finished(int core_id, int job_number, int time)
 	schedule->num_jobs = schedule->num_jobs + 1;
 	
 	//grab the finished job and update finished job times
-	job_t* finished_job = schedule->core_array[core_id].current_job;
+	job_t* finished_job = schedule->core_array[core_id];
 	finished_job->turnaround_time = time - finished_job->arrival_time;
 	
-	//remove job from the queue and core
-	//priqueue_remove(schedule->queue, finished_job);
-	schedule->core_array[core_id].current_job = NULL;
-	schedule->core_array[core_id].busy = 0;
+	schedule->core_array[core_id] = NULL;
 	
 	//update total times
 	schedule->total_response = schedule->total_response + finished_job->response_time;
@@ -291,46 +306,10 @@ int scheduler_job_finished(int core_id, int job_number, int time)
 		{
 			next_job->response_time = time - next_job->arrival_time;
 		}
-		schedule->core_array[core_id].current_job = next_job;
-		schedule->core_array[core_id].busy = 1;
+		schedule->core_array[core_id] = next_job;
 		return (next_job->job_id);
 	}
-	
-	//find next job
-	//int queue_size = priqueue_size(schedule->queue);
-	/*
-	if (queue_size != 0)
-	{
-		//grab next job in the queue
-		//update the job to active_core
-		for(int i = 0; i < queue_size; i++)
-		{
-			next_job =(job_t*)(priqueue_at(schedule->queue, i));
-			if (next_job->active_core == -1)
-			{
-				break;
-			}
-			else
-			{
-				next_job = NULL;
-				core_return = -1;
-			}
-		}
 
-		if (next_job != NULL)
-		{
-			if (next_job->response_time == -1)
-			{
-				next_job->response_time = time - next_job->arrival_time;
-				core_return = next_job->job_id;
-			}
-		}
-	}
-	else
-	{
-		core_return = -1;
-	}
-	*/
 	free(finished_job);
 	return (-1);
 }
@@ -351,13 +330,12 @@ int scheduler_job_finished(int core_id, int job_number, int time)
  */
 int scheduler_quantum_expired(int core_id, int time)
 {
-	job_t* old_job = schedule->core_array[core_id].current_job;
+	job_t* old_job = schedule->core_array[core_id];
 	old_job->arrival_time = time;//reset time to be able to get it to back of queue
 	old_job->active_core = -1;//not active
 	//priqueue_remove(schedule->queue, old_job);
 	priqueue_offer(schedule->queue, old_job);
-	schedule->core_array[core_id].current_job = NULL;//no job
-	schedule->core_array[core_id].busy = 0;//not busy
+	schedule->core_array[core_id] = NULL;//no job
 	
 	int core_return = -1;
 
@@ -373,45 +351,9 @@ int scheduler_quantum_expired(int core_id, int time)
 		{
 			next_job->response_time = time - next_job->arrival_time;
 		}
-		schedule->core_array[core_id].current_job = next_job;
-		schedule->core_array[core_id].busy = 1;
+		schedule->core_array[core_id] = next_job;
 		return (next_job->job_id);
 	}	
-	/*
-	int queue_size = priqueue_size(schedule->queue);
-	
-	if (queue_size != 0)
-	{
-		//grab next job in the queue
-		//update the job to active_core
-		for(int i = 0; i < queue_size; i++)
-		{
-			next_job =(job_t*)(priqueue_at(schedule->queue, i));
-			if (next_job->active_core == -1)
-			{
-				break;
-			}
-			else
-			{
-				next_job = NULL;
-				core_return = -1;
-			}
-		}
-
-		if (next_job != NULL)
-		{
-			if (next_job->response_time == -1)
-			{
-				next_job->response_time = time - next_job->arrival_time;
-				core_return = next_job->job_id;
-			}
-		}
-	}
-	else
-	{
-		core_return = -1;
-	}*/	
-	
 	return (-1);
 }
 
