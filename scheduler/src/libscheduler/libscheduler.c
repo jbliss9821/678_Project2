@@ -146,10 +146,10 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 	new_job->arrival_time = time;
 	new_job->running_time = running_time;
 	new_job->waiting_time = 0;
-	new_job->turnaround_time = -1;
+	new_job->response_time = -1;
 	new_job->priority = priority;//(The lower the value, the higher the priority.)
 	new_job->active_core = -1; //-1 is no core
-	new_job->response_time = 0;
+	new_job->turnaround_time = 0;
 	
 	//queue the job
 	priqueue_offer(&schedule.queue, new_job);
@@ -220,7 +220,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 		{
 			job_to_swap = schedule.core_array[core_to_swap].current_job;
 			schedule.core_array[core_to_swap].current_job = new_job;
-			new_job->turnaround_time = 0;//turnaround is 0 since the job is getting scheduled now
+			new_job->response_time = 0;//turnaround is 0 since the job is getting scheduled now
 			new_job->active_core = core_to_swap;
 			job_to_swap->active_core = -1;//preempted job goes back to inactive
 			return(core_to_swap);
@@ -252,7 +252,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 int scheduler_job_finished(int core_id, int job_number, int time)
 {
 	//TODO: when putting in a new job from the queue, adjust the turnaround time if it hasn't been scheduled yet
-	//if next_job->turnaround_time == -1, next_job->turnaround_time = time - next_job->arrival_time;
+	//if next_job->response_time == -1, next_job->response_time = time - next_job->arrival_time;
 	job_t* next_job = NULL;
 	
 	int core_return = -1;
@@ -265,7 +265,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
 	
 	//grab the finished job and update finished job times
 	job_t* finished_job = schedule.core_array[core_id].current_job;
-	finished_job->response_time = time - finished_job->arrival_time;
+	finished_job->turnaround_time = time - finished_job->arrival_time;
 	
 	//remove job from the queue and core
 	priqueue_remove(&schedule.queue, finished_job);
@@ -275,7 +275,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
 	//update total times
 	schedule.total_response = schedule.total_response + finished_job->response_time;
 	schedule.total_wait = schedule.total_wait + finished_job->waiting_time;
-	schedule.total_turnaround = schedule.total_turnaround + finished_job->turnaround_time;
+	schedule.total_turnaround = schedule.total_turnaround + finished_job->response_time;
 	
 	//find next job
 	int queue_size = priqueue_size(&schedule.queue);
@@ -300,9 +300,9 @@ int scheduler_job_finished(int core_id, int job_number, int time)
 
 		if (next_job != NULL)
 		{
-			if (next_job->turnaround_time == -1)
+			if (next_job->response_time == -1)
 			{
-				next_job->turnaround_time = time - next_job->arrival_time;
+				next_job->response_time = time - next_job->arrival_time;
 				core_return = next_job->job_id;
 			}
 		}
@@ -363,9 +363,9 @@ int scheduler_quantum_expired(int core_id, int time)
 
 		if (next_job != NULL)
 		{
-			if (next_job->turnaround_time == -1)
+			if (next_job->response_time == -1)
 			{
-				next_job->turnaround_time = time - next_job->arrival_time;
+				next_job->response_time = time - next_job->arrival_time;
 				core_return = next_job->job_id;
 			}
 		}
